@@ -133,19 +133,21 @@ static const struct uvc_processing_unit_descriptor uvc_processing = {
 	.iProcessing		= 0,
 };
 
-DECLARE_UVC_EXTENSION_UNIT_DESCRIPTOR(1, 2);
-static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 2) uvc_extension = {
-	.bLength = UVC_DT_EXTENSION_UNIT_SIZE(1, 2),
+DECLARE_UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3);
+static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3) uvc_extension = {
+	.bLength = UVC_DT_EXTENSION_UNIT_SIZE(1, 3),
 	.bDescriptorType = USB_DT_CS_INTERFACE,
 	.bDescriptorSubType = UVC_VC_EXTENSION_UNIT,
 	.bUnitID = 4,
 	.guidExtensionCode = { 0x54, 0x48, 0x49, 0x4e, 0x47, 0x49, 0x4e, 0x4f,
 		0x2d, 0x55, 0x56, 0x43, 0x44, 0x2d, 0x01, 0x00 },
-	.bNumControls = 12,
+	.bNumControls = 20,
 	.bNrInPins = 1,
 	.baSourceID = { 2 },
-	.bControlSize = 2,
-	.bmControls = { 0xff, 0x0f },
+	.bControlSize = 3,
+	/* Selectors 1-20: ISP (1-9), factory reset (10), flip (11-12),
+	 * encoder settings (13-19), H.264 keyframe request (20). */
+	.bmControls = { 0xff, 0xff, 0x0f },
 	.iExtension = 0,
 };
 
