@@ -80,7 +80,15 @@ uvc_video_encode_bulk(struct usb_request *req, struct uvc_video *video,
 	len -= ret;
 
 	req->length = video->req_size - len;
-	req->zero = video->payload_size == video->max_payload_size;
+	/* A bulk host only sees a UVC payload end when a transfer comes in
+	 * short. That is true of a full payload and, just as much, of the last
+	 * payload of every frame: if that one lands on an exact multiple of
+	 * maxpacket and no ZLP follows, the host's transfer runs on into the
+	 * next frame and takes its first chunk -- header included -- as tail
+	 * data of this one. The UDC only emits the ZLP when the length is a
+	 * multiple of maxpacket, so flagging every payload end is safe. */
+	req->zero = video->payload_size == video->max_payload_size ||
+		    buf->bytesused == video->queue.buf_used;
 
 	if (buf->bytesused == video->queue.buf_used) {
 		video->queue.buf_used = 0;
