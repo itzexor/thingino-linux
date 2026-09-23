@@ -15,6 +15,9 @@
 #include <linux/errno.h>
 #include <linux/usb/ch9.h>
 #include <linux/usb/gadget.h>
+#include <linux/ktime.h>
+#include <asm/div64.h>
+#include <asm/unaligned.h>
 
 #include <media/v4l2-dev.h>
 
@@ -25,17 +28,59 @@
  * Video codecs
  */
 
+/* CLOCK_MONOTONIC nanoseconds on the 48 MHz device clock advertised as
+ * dwClockFrequency in the VideoControl header (webcam.c): ns * 48 / 1000.
+ * Only the low 32 bits go on the wire; the host expects them to wrap. */
+static u32 uvc_video_clock(u64 ns)
+{
+	ns *= 6;
+	do_div(ns, 125);
+	return (u32)ns;
+}
+
+/* The 11-bit USB frame number for the SCR. At high speed the UDC reports
+ * microframes, eight to a frame. */
+static u16 uvc_video_sof(struct uvc_video *video)
+{
+	struct uvc_device *uvc = container_of(video, struct uvc_device, video);
+	struct usb_gadget *gadget = uvc->func.config->cdev->gadget;
+	int frame = usb_gadget_frame_number(gadget);
+
+	if (frame < 0)
+		return 0;
+	if (gadget->speed == USB_SPEED_HIGH)
+		frame >>= 3;
+	return frame & 0x7ff;
+}
+
 static int
 uvc_video_encode_header(struct uvc_video *video, struct uvc_buffer *buf,
 		u8 *data, int len)
 {
-	data[0] = 2;
+	const struct timeval *tv = &buf->buf.v4l2_buf.timestamp;
+	int hlen = 2;
+
 	data[1] = UVC_STREAM_EOH | video->fid;
 
-	if (buf->bytesused - video->queue.buf_used <= len - 2)
+	/* A buffer queued with a timestamp carries its capture time: send it
+	 * as the PTS, plus an SCR saying when this payload left on the same
+	 * clock, so the host can recover the camera's frame timing instead
+	 * of stamping frames on arrival. The PTS repeats in every payload of
+	 * the frame, as UVC requires. */
+	if (tv->tv_sec || tv->tv_usec) {
+		put_unaligned_le32(uvc_video_clock(timeval_to_ns(tv)), &data[2]);
+		put_unaligned_le32(uvc_video_clock(ktime_to_ns(ktime_get())),
+				   &data[6]);
+		put_unaligned_le16(uvc_video_sof(video), &data[10]);
+		data[1] |= UVC_STREAM_PTS | UVC_STREAM_SCR;
+		hlen = 12;
+	}
+	data[0] = hlen;
+
+	if (buf->bytesused - video->queue.buf_used <= len - hlen)
 		data[1] |= UVC_STREAM_EOF;
 
-	return 2;
+	return hlen;
 }
 
 static int
