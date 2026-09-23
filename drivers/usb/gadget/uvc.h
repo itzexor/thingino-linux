@@ -130,6 +130,8 @@ struct uvc_video
 	/* Context data used by the completion handler */
 	__u32 payload_size;
 	__u32 max_payload_size;
+	/* Requests completed since streaming was enabled */
+	unsigned int completed;
 
 	struct uvc_video_queue queue;
 	unsigned int fid;

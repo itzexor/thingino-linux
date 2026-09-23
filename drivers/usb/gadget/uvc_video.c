@@ -176,6 +176,7 @@ uvc_video_complete(struct usb_ep *ep, struct usb_request *req)
 
 	switch (req->status) {
 	case 0:
+		video->completed++;
 		break;
 
 	case -ESHUTDOWN:	/* disconnect from host. */
@@ -373,6 +374,8 @@ uvc_video_enable(struct uvc_video *video, int enable)
 
 	if ((ret = uvc_queue_enable(&video->queue, 1)) < 0)
 		return ret;
+
+	video->completed = 0;
 
 	if ((ret = uvc_video_alloc_requests(video)) < 0)
 		return ret;

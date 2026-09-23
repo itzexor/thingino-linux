@@ -245,6 +245,29 @@ uvc_function_setup(struct usb_function *f, const struct usb_ctrlrequest *ctrl)
 	 *	le16_to_cpu(ctrl->wIndex), le16_to_cpu(ctrl->wLength));
 	 */
 
+	/* The host cleared the halt on our bulk streaming endpoint. That is
+	 * the only stream-stop signal bulk has (there is no alternate
+	 * setting to drop back to), and the UDC has already answered it --
+	 * see dwc2_ep0_handle_feature(). Raise STREAMOFF so userspace stops
+	 * feeding a host that has gone away, but only for a stream that has
+	 * moved data: a clear sent before streaming starts is not a stop. */
+	if (ctrl->bRequestType == (USB_DIR_OUT | USB_TYPE_STANDARD |
+				   USB_RECIP_ENDPOINT) &&
+	    ctrl->bRequest == USB_REQ_CLEAR_FEATURE &&
+	    le16_to_cpu(ctrl->wValue) == USB_ENDPOINT_HALT) {
+		struct usb_ep *ep = uvc->video.ep;
+
+		if (uvc->bulk_streaming && ep && ep->desc &&
+		    (le16_to_cpu(ctrl->wIndex) & 0xff) ==
+		    ep->desc->bEndpointAddress && uvc->video.completed) {
+			uvc->video.completed = 0;
+			memset(&v4l2_event, 0, sizeof(v4l2_event));
+			v4l2_event.type = UVC_EVENT_STREAMOFF;
+			v4l2_event_queue(uvc->vdev, &v4l2_event);
+		}
+		return -EOPNOTSUPP;
+	}
+
 	if ((ctrl->bRequestType & USB_TYPE_MASK) != USB_TYPE_CLASS) {
 		INFO(f->config->cdev, "invalid request type\n");
 		return -EINVAL;

@@ -845,6 +845,17 @@ static int dwc2_ep0_handle_feature(struct dwc2 *dwc,
 			ret = __dwc2_gadget_ep_set_halt(dep, set);
 			if (ret)
 				return -EINVAL;
+			/*
+			 * Clearing the halt on a bulk endpoint is how a host
+			 * says it stopped reading: uvcvideo and Windows both
+			 * end a bulk video stream this way. The request is
+			 * answered here and would never reach the function
+			 * that owns the endpoint, so pass it on as a
+			 * notification. The status stage stays ours; the
+			 * function's return value is only advisory.
+			 */
+			if (!set && (wIndex & USB_ENDPOINT_NUMBER_MASK))
+				dwc2_ep0_delegate_req(dwc, ctrl);
 			break;
 		default:
 			return -EINVAL;
