@@ -111,12 +111,15 @@ static const struct uvc_camera_terminal_descriptor uvc_camera_terminal = {
 	.wTerminalType		= cpu_to_le16(0x0201),
 	.bAssocTerminal		= 0,
 	.iTerminal		= 0,
-	.wObjectiveFocalLengthMin	= cpu_to_le16(0),
-	.wObjectiveFocalLengthMax	= cpu_to_le16(0),
-	.wOcularFocalLength		= cpu_to_le16(0),
+	/* Digital zoom: the Zoom (Absolute) range uvcd answers with. */
+	.wObjectiveFocalLengthMin	= cpu_to_le16(100),
+	.wObjectiveFocalLengthMax	= cpu_to_le16(400),
+	.wOcularFocalLength		= cpu_to_le16(100),
 	.bControlSize		= 3,
-	.bmControls[0]		= 0,
-	.bmControls[1]		= 0,
+	/* D1 auto-exposure mode, D2 auto-exposure priority, D3 exposure time
+	 * (absolute), D9 zoom (absolute), D11 pan/tilt (absolute). */
+	.bmControls[0]		= (1 << 1) | (1 << 2) | (1 << 3),
+	.bmControls[1]		= (1 << 1) | (1 << 3),
 	.bmControls[2]		= 0,
 };
 
