@@ -4,7 +4,7 @@
  *	Copyright (C) 2009-2010
  *	    Laurent Pinchart (laurent.pinchart@ideasonboard.com)
  *
- *	Modified for thingino Raptor Webcam (MJPEG + H.264)
+ *	Modified for the Creality K1 camera (MJPEG + H.264)
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ USB_GADGET_COMPOSITE_OPTIONS();
 #define WEBCAM_DEVICE_BCD		0x0010	/* 0.10 */
 
 static char webcam_vendor_label[] = "thingino";
-static char webcam_product_label[] = "Raptor Webcam";
+static char webcam_product_label[] = "K1 Camera";
 static char webcam_config_label[] = "Video";
 static char webcam_extension_label[] = "Thingino Camera Controls";
 
@@ -617,7 +617,7 @@ webcam_bind(struct usb_composite_dev *cdev)
 		goto error;
 
 	usb_composite_overwrite_options(cdev, &coverwrite);
-	INFO(cdev, "Raptor Webcam Gadget\n");
+	INFO(cdev, "K1 Camera Gadget\n");
 	return 0;
 
 error:
@@ -654,6 +654,6 @@ module_init(webcam_init);
 module_exit(webcam_cleanup);
 
 MODULE_AUTHOR("Laurent Pinchart");
-MODULE_DESCRIPTION("Raptor Webcam Gadget");
+MODULE_DESCRIPTION("K1 Camera Gadget");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("0.2.0");
