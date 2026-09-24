@@ -547,6 +547,25 @@ static const struct uvc_descriptor_header * const uvc_ss_streaming_cls[] = {
 static struct usb_function_instance *fi_acm;
 static struct usb_function *f_acm;
 
+/* Names for the ACM console in place of f_acm's generic "CDC ..." ones.
+ * The order is f_acm's ACM_CTRL_IDX, ACM_DATA_IDX, ACM_IAD_IDX. */
+static struct usb_string webcam_acm_string_defs[] = {
+	{ .s = "K1 Camera Serial Console" },
+	{ .s = "K1 Camera Serial Data" },
+	{ .s = "K1 Camera Serial Console" },
+	{  }
+};
+
+static struct usb_gadget_strings webcam_acm_string_table = {
+	.language = 0x0409,
+	.strings = webcam_acm_string_defs,
+};
+
+static struct usb_gadget_strings *webcam_acm_strings[] = {
+	&webcam_acm_string_table,
+	NULL,
+};
+
 static int __init
 webcam_config_bind(struct usb_configuration *c)
 {
@@ -565,6 +584,7 @@ webcam_config_bind(struct usb_configuration *c)
 				PTR_ERR(f_acm));
 			f_acm = NULL;
 		} else {
+			f_acm->strings = webcam_acm_strings;
 			ret = usb_add_function(c, f_acm);
 			if (ret < 0)
 				pr_warn("g_webcam: ACM add_function failed: %d\n", ret);
