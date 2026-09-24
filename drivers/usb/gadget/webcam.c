@@ -37,7 +37,11 @@ USB_GADGET_COMPOSITE_OPTIONS();
  */
 
 #define WEBCAM_VENDOR_ID		0x1d6b	/* Linux Foundation */
-#define WEBCAM_PRODUCT_ID		0x0102	/* Webcam A/V gadget */
+/* Not upstream's 0x0102: that is ether.c's EEM gadget, and hosts name the
+ * device from the USB ID database, so it showed up as "EEM Gadget". No
+ * gadget uses 0x0110 and the database has no entry for it, so hosts fall
+ * back to the product string below. */
+#define WEBCAM_PRODUCT_ID		0x0110
 #define WEBCAM_DEVICE_BCD		0x0010	/* 0.10 */
 
 static char webcam_vendor_label[] = "thingino";
