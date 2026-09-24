@@ -219,10 +219,13 @@ static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_1080p = {
 	.dwMaxBitRate		= cpu_to_le32(40000000),
 	.dwMaxVideoFrameBufferSize	= cpu_to_le32(1920 * 1080 * 2),
 	.dwDefaultFrameInterval	= cpu_to_le32(333333),
-	.bFrameIntervalType	= 3,
+	.bFrameIntervalType	= 6,
 	.dwFrameInterval[0]	= cpu_to_le32(333333),	/* 30 fps */
 	.dwFrameInterval[1]	= cpu_to_le32(400000),	/* 25 fps */
-	.dwFrameInterval[2]	= cpu_to_le32(666666),	/* 15 fps */
+	.dwFrameInterval[2]	= cpu_to_le32(500000),	/* 20 fps */
+	.dwFrameInterval[3]	= cpu_to_le32(666666),	/* 15 fps */
+	.dwFrameInterval[4]	= cpu_to_le32(1000000),	/* 10 fps */
+	.dwFrameInterval[5]	= cpu_to_le32(2000000),	/* 5 fps */
 };
 
 static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_360p = {
@@ -237,10 +240,13 @@ static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_360p = {
 	.dwMaxBitRate		= cpu_to_le32(10000000),
 	.dwMaxVideoFrameBufferSize	= cpu_to_le32(640 * 360 * 2),
 	.dwDefaultFrameInterval	= cpu_to_le32(333333),
-	.bFrameIntervalType	= 3,
+	.bFrameIntervalType	= 6,
 	.dwFrameInterval[0]	= cpu_to_le32(333333),	/* 30 fps */
 	.dwFrameInterval[1]	= cpu_to_le32(400000),	/* 25 fps */
-	.dwFrameInterval[2]	= cpu_to_le32(666666),	/* 15 fps */
+	.dwFrameInterval[2]	= cpu_to_le32(500000),	/* 20 fps */
+	.dwFrameInterval[3]	= cpu_to_le32(666666),	/* 15 fps */
+	.dwFrameInterval[4]	= cpu_to_le32(1000000),	/* 10 fps */
+	.dwFrameInterval[5]	= cpu_to_le32(2000000),	/* 5 fps */
 };
 
 static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_1280x960 = {
@@ -249,8 +255,9 @@ static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_1280x960 = {
 	.wWidth = cpu_to_le16(1280), .wHeight = cpu_to_le16(960),
 	.dwMinBitRate = cpu_to_le32(2000000), .dwMaxBitRate = cpu_to_le32(30000000),
 	.dwMaxVideoFrameBufferSize = cpu_to_le32(1280 * 960 * 2),
-	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 3,
-	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(666666) },
+	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 6,
+	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(500000),
+			     cpu_to_le32(666666), cpu_to_le32(1000000), cpu_to_le32(2000000) },
 };
 
 static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_720p = {
@@ -259,8 +266,9 @@ static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_720p = {
 	.wWidth = cpu_to_le16(1280), .wHeight = cpu_to_le16(720),
 	.dwMinBitRate = cpu_to_le32(1500000), .dwMaxBitRate = cpu_to_le32(25000000),
 	.dwMaxVideoFrameBufferSize = cpu_to_le32(1280 * 720 * 2),
-	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 3,
-	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(666666) },
+	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 6,
+	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(500000),
+			     cpu_to_le32(666666), cpu_to_le32(1000000), cpu_to_le32(2000000) },
 };
 
 static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_800x600 = {
@@ -269,8 +277,9 @@ static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_800x600 = {
 	.wWidth = cpu_to_le16(800), .wHeight = cpu_to_le16(600),
 	.dwMinBitRate = cpu_to_le32(1000000), .dwMaxBitRate = cpu_to_le32(18000000),
 	.dwMaxVideoFrameBufferSize = cpu_to_le32(800 * 600 * 2),
-	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 3,
-	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(666666) },
+	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 6,
+	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(500000),
+			     cpu_to_le32(666666), cpu_to_le32(1000000), cpu_to_le32(2000000) },
 };
 
 static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_640x480 = {
@@ -279,8 +288,9 @@ static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_640x480 = {
 	.wWidth = cpu_to_le16(640), .wHeight = cpu_to_le16(480),
 	.dwMinBitRate = cpu_to_le32(800000), .dwMaxBitRate = cpu_to_le32(12000000),
 	.dwMaxVideoFrameBufferSize = cpu_to_le32(640 * 480 * 2),
-	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 3,
-	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(666666) },
+	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 6,
+	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(500000),
+			     cpu_to_le32(666666), cpu_to_le32(1000000), cpu_to_le32(2000000) },
 };
 
 /* --- Format 2: H.264 (Frame-Based) --- */
@@ -358,12 +368,15 @@ static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_1080p = {
 	.dwMinBitRate		= cpu_to_le32(500000),
 	.dwMaxBitRate		= cpu_to_le32(8000000),
 	.dwDefaultFrameInterval	= cpu_to_le32(333333),
-	.bFrameIntervalType	= 3,
+	.bFrameIntervalType	= 6,
 	.dwBytesPerLine		= 0,
 	.dwFrameInterval	= {
 		cpu_to_le32(333333),	/* 30 fps */
 		cpu_to_le32(400000),	/* 25 fps */
+		cpu_to_le32(500000),	/* 20 fps */
 		cpu_to_le32(666666),	/* 15 fps */
+		cpu_to_le32(1000000),	/* 10 fps */
+		cpu_to_le32(2000000),	/* 5 fps */
 	},
 };
 
@@ -378,12 +391,15 @@ static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_360p = {
 	.dwMinBitRate		= cpu_to_le32(100000),
 	.dwMaxBitRate		= cpu_to_le32(2000000),
 	.dwDefaultFrameInterval	= cpu_to_le32(333333),
-	.bFrameIntervalType	= 3,
+	.bFrameIntervalType	= 6,
 	.dwBytesPerLine		= 0,
 	.dwFrameInterval	= {
 		cpu_to_le32(333333),	/* 30 fps */
 		cpu_to_le32(400000),	/* 25 fps */
+		cpu_to_le32(500000),	/* 20 fps */
 		cpu_to_le32(666666),	/* 15 fps */
+		cpu_to_le32(1000000),	/* 10 fps */
+		cpu_to_le32(2000000),	/* 5 fps */
 	},
 };
 
@@ -392,8 +408,9 @@ static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_1280x960 = {
 	.bDescriptorSubType = UVC_VS_FRAME_FRAME_BASED, .bFrameIndex = 2, .bmCapabilities = 0,
 	.wWidth = cpu_to_le16(1280), .wHeight = cpu_to_le16(960),
 	.dwMinBitRate = cpu_to_le32(400000), .dwMaxBitRate = cpu_to_le32(6000000),
-	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 3, .dwBytesPerLine = 0,
-	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(666666) },
+	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 6, .dwBytesPerLine = 0,
+	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(500000),
+			     cpu_to_le32(666666), cpu_to_le32(1000000), cpu_to_le32(2000000) },
 };
 
 static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_720p = {
@@ -401,8 +418,9 @@ static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_720p = {
 	.bDescriptorSubType = UVC_VS_FRAME_FRAME_BASED, .bFrameIndex = 3, .bmCapabilities = 0,
 	.wWidth = cpu_to_le16(1280), .wHeight = cpu_to_le16(720),
 	.dwMinBitRate = cpu_to_le32(300000), .dwMaxBitRate = cpu_to_le32(5000000),
-	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 3, .dwBytesPerLine = 0,
-	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(666666) },
+	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 6, .dwBytesPerLine = 0,
+	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(500000),
+			     cpu_to_le32(666666), cpu_to_le32(1000000), cpu_to_le32(2000000) },
 };
 
 static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_800x600 = {
@@ -410,8 +428,9 @@ static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_800x600 = {
 	.bDescriptorSubType = UVC_VS_FRAME_FRAME_BASED, .bFrameIndex = 4, .bmCapabilities = 0,
 	.wWidth = cpu_to_le16(800), .wHeight = cpu_to_le16(600),
 	.dwMinBitRate = cpu_to_le32(200000), .dwMaxBitRate = cpu_to_le32(3500000),
-	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 3, .dwBytesPerLine = 0,
-	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(666666) },
+	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 6, .dwBytesPerLine = 0,
+	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(500000),
+			     cpu_to_le32(666666), cpu_to_le32(1000000), cpu_to_le32(2000000) },
 };
 
 static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_640x480 = {
@@ -419,8 +438,9 @@ static const struct UVC_FRAME_FRAMEBASED_6 uvc_frame_h264_640x480 = {
 	.bDescriptorSubType = UVC_VS_FRAME_FRAME_BASED, .bFrameIndex = 5, .bmCapabilities = 0,
 	.wWidth = cpu_to_le16(640), .wHeight = cpu_to_le16(480),
 	.dwMinBitRate = cpu_to_le32(150000), .dwMaxBitRate = cpu_to_le32(3000000),
-	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 3, .dwBytesPerLine = 0,
-	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(666666) },
+	.dwDefaultFrameInterval = cpu_to_le32(333333), .bFrameIntervalType = 6, .dwBytesPerLine = 0,
+	.dwFrameInterval = { cpu_to_le32(333333), cpu_to_le32(400000), cpu_to_le32(500000),
+			     cpu_to_le32(666666), cpu_to_le32(1000000), cpu_to_le32(2000000) },
 };
 
 /* --- Color matching --- */
