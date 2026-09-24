@@ -100,7 +100,10 @@ static const struct UVC_HEADER_DESCRIPTOR(1) uvc_control_header = {
 	.bLength		= UVC_DT_HEADER_SIZE(1),
 	.bDescriptorType	= USB_DT_CS_INTERFACE,
 	.bDescriptorSubType	= UVC_VC_HEADER,
-	.bcdUVC			= cpu_to_le16(0x0100),
+	/* 1.1: the H.264 format below is frame-based, which UVC 1.1
+	 * introduced. uvcd answers PROBE/COMMIT with the 34-byte 1.1
+	 * streaming control. */
+	.bcdUVC			= cpu_to_le16(0x0110),
 	.wTotalLength		= 0, /* dynamic */
 	.dwClockFrequency	= cpu_to_le32(48000000),
 	.bInCollection		= 0, /* dynamic */
@@ -127,8 +130,28 @@ static const struct uvc_camera_terminal_descriptor uvc_camera_terminal = {
 	.bmControls[2]		= 0,
 };
 
-static const struct uvc_processing_unit_descriptor uvc_processing = {
-	.bLength		= UVC_DT_PROCESSING_UNIT_SIZE(2),
+/*
+ * UVC 1.1 appended bmVideoStandards to the Processing Unit descriptor, and
+ * uvcvideo rejects a 1.1 device whose PU descriptor lacks it. The kernel
+ * header only has the 1.0 layout.
+ */
+#define UVC_DT_PROCESSING_UNIT_1_1_SIZE(n)		(10 + (n))
+
+struct uvc_processing_unit_descriptor_1_1 {
+	__u8  bLength;
+	__u8  bDescriptorType;
+	__u8  bDescriptorSubType;
+	__u8  bUnitID;
+	__u8  bSourceID;
+	__u16 wMaxMultiplier;
+	__u8  bControlSize;
+	__u8  bmControls[2];
+	__u8  iProcessing;
+	__u8  bmVideoStandards;
+} __attribute__((packed));
+
+static const struct uvc_processing_unit_descriptor_1_1 uvc_processing = {
+	.bLength		= UVC_DT_PROCESSING_UNIT_1_1_SIZE(2),
 	.bDescriptorType	= USB_DT_CS_INTERFACE,
 	.bDescriptorSubType	= UVC_VC_PROCESSING_UNIT,
 	.bUnitID		= 2,
@@ -138,6 +161,7 @@ static const struct uvc_processing_unit_descriptor uvc_processing = {
 	.bmControls[0]		= (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6),
 	.bmControls[1]		= (1 << 0) | (1 << 2) | (1 << 4),
 	.iProcessing		= 0,
+	.bmVideoStandards	= 0,	/* digital sensor, no analog standard */
 };
 
 DECLARE_UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3);
@@ -300,7 +324,7 @@ static const struct UVC_FRAME_MJPEG(6) uvc_frame_mjpg_640x480 = {
 /* --- Format 2: H.264 (Frame-Based) --- */
 
 /*
- * UVC 1.5 frame-based format/frame descriptors for H.264.
+ * UVC 1.1 frame-based format/frame descriptors for H.264.
  * The kernel headers define UVC_VS_FORMAT_FRAME_BASED (0x10) and
  * UVC_VS_FRAME_FRAME_BASED (0x11) but lack the corresponding structs.
  */
