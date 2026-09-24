@@ -598,8 +598,10 @@ static struct usb_configuration webcam_config_driver = {
 	.label			= webcam_config_label,
 	.bConfigurationValue	= 1,
 	.iConfiguration		= 0, /* dynamic */
-	.bmAttributes		= USB_CONFIG_ATT_SELFPOWER,
-	.MaxPower		= CONFIG_USB_GADGET_VBUS_DRAW,
+	/* The K1 camera runs entirely off VBUS, so claim bus power and the
+	 * full USB 2.0 budget rather than the Kconfig default of 2 mA. */
+	.bmAttributes		= 0,
+	.MaxPower		= 500,
 };
 
 static int /* __init_or_exit */
