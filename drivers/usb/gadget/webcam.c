@@ -148,9 +148,10 @@ static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3) uvc_extension = {
 	.bNrInPins = 1,
 	.baSourceID = { 2 },
 	.bControlSize = 3,
-	/* Selectors 1-20: ISP (1-9), factory reset (10), flip (11-12),
-	 * encoder settings (13-19), H.264 keyframe request (20). */
-	.bmControls = { 0xff, 0xff, 0x0f },
+	/* Selectors 1-22: ISP (1-9), factory reset (10), encoder settings
+	 * (13-19), H.264 keyframe request (20), metering (21), rotation (22).
+	 * 11-12 (the old flips) are retired: their bits stay clear. */
+	.bmControls = { 0xff, 0xf3, 0x3f },
 	.iExtension = 0,
 };
 
