@@ -612,12 +612,14 @@ acm_bind(struct usb_configuration *c, struct usb_function *f)
 	int			status;
 	struct usb_ep		*ep;
 
-	/* REVISIT might want instance-specific strings to help
-	 * distinguish instances ...
+	/* Attach f->strings rather than acm_strings, so a gadget can name
+	 * its instance by setting f->strings before usb_add_function(). It
+	 * defaults to acm_strings, and a replacement must use the same
+	 * ACM_*_IDX layout.
 	 */
 
 	/* maybe allocate device-global string IDs, and patch descriptors */
-	us = usb_gstrings_attach(cdev, acm_strings,
+	us = usb_gstrings_attach(cdev, f->strings,
 			ARRAY_SIZE(acm_string_defs));
 	if (IS_ERR(us))
 		return PTR_ERR(us);
