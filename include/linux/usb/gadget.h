@@ -541,8 +541,11 @@ struct usb_gadget {
 	unsigned			b_hnp_enable:1;
 	unsigned			a_hnp_support:1;
 	unsigned			a_alt_hnp_support:1;
-	atomic_t                        connect_count;
 	unsigned			quirk_ep_out_aligned_size:1;
+	/* Pullup state: the pullup is on only while connected and not
+	 * deactivated. */
+	unsigned			connected:1;
+	unsigned			deactivated:1;
 };
 
 static inline void set_gadget_data(struct usb_gadget *gadget, void *data)
@@ -745,13 +748,21 @@ static inline int usb_gadget_vbus_disconnect(struct usb_gadget *gadget)
  */
 static inline int usb_gadget_connect(struct usb_gadget *gadget)
 {
+	int ret;
+
 	if (!gadget->ops->pullup)
 		return -EOPNOTSUPP;
 
-	if (atomic_inc_return(&gadget->connect_count) == 1)
-	return gadget->ops->pullup(gadget, 1);
+	if (gadget->deactivated) {
+		/* Connect once usb_gadget_activate() is called. */
+		gadget->connected = 1;
+		return 0;
+	}
 
-	return 0;
+	ret = gadget->ops->pullup(gadget, 1);
+	if (!ret)
+		gadget->connected = 1;
+	return ret;
 }
 
 /**
@@ -771,11 +782,78 @@ static inline int usb_gadget_connect(struct usb_gadget *gadget)
  */
 static inline int usb_gadget_disconnect(struct usb_gadget *gadget)
 {
+	int ret;
+
 	if (!gadget->ops->pullup)
 		return -EOPNOTSUPP;
 
-	if (atomic_dec_and_test(&gadget->connect_count))
-	return gadget->ops->pullup(gadget, 0);
+	if (!gadget->connected)
+		return 0;
+
+	if (gadget->deactivated) {
+		/* The pullup is already off; don't reconnect on activate. */
+		gadget->connected = 0;
+		return 0;
+	}
+
+	ret = gadget->ops->pullup(gadget, 0);
+	if (!ret)
+		gadget->connected = 0;
+	return ret;
+}
+
+/**
+ * usb_gadget_deactivate - deactivate function which is not ready to work
+ * @gadget: the peripheral being deactivated
+ *
+ * This routine may be used during the gadget driver bind() call to prevent
+ * the peripheral from ever being visible to the USB host, unless later
+ * usb_gadget_activate() is called. For example, user mode components may
+ * need to be activated before the system can talk to hosts.
+ *
+ * Unlike usb_gadget_disconnect(), this does not change what the UDC core
+ * (or the soft_connect attribute) asked for: connect and disconnect are
+ * absolute, while activation only holds the pullup off on top of them.
+ *
+ * Returns zero on success, else negative errno.
+ */
+static inline int usb_gadget_deactivate(struct usb_gadget *gadget)
+{
+	int ret;
+
+	if (gadget->deactivated)
+		return 0;
+
+	if (gadget->connected) {
+		ret = usb_gadget_disconnect(gadget);
+		if (ret)
+			return ret;
+		/* Reconnect when usb_gadget_activate() is called. */
+		gadget->connected = 1;
+	}
+	gadget->deactivated = 1;
+
+	return 0;
+}
+
+/**
+ * usb_gadget_activate - activate function which is not ready to work
+ * @gadget: the peripheral being activated
+ *
+ * Turns the pullup back on if the gadget was connected when deactivated
+ * (or was connected while deactivated).
+ *
+ * Returns zero on success, else negative errno.
+ */
+static inline int usb_gadget_activate(struct usb_gadget *gadget)
+{
+	if (!gadget->deactivated)
+		return 0;
+
+	gadget->deactivated = 0;
+
+	if (gadget->connected)
+		return usb_gadget_connect(gadget);
 
 	return 0;
 }
