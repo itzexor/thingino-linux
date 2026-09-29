@@ -345,9 +345,17 @@ uvc_function_set_alt(struct usb_function *f, unsigned interface, unsigned alt)
 
 		/* For bulk, enable the endpoint but don't fire STREAMON —
 		 * userspace will start streaming after COMMIT negotiation.
+		 *
+		 * Rearm it on every SET_CONFIGURATION and SET_INTERFACE, as
+		 * the stock Ingenic usbcamera.ko does, not just the first:
+		 * both reset the host's end, and a bus reset or disconnect
+		 * disables ours in the UDC. Enabling it only once left the
+		 * first stream after every re-enumeration (a uvcd restart,
+		 * a host resume) failing, the host seeing -EPROTO on every
+		 * IN. Never while streaming: the stream owns it then.
 		 */
-		if (uvc->state == UVC_STATE_CONNECTED && uvc->video.ep &&
-		    !uvc->video.max_payload_size) {
+		if (uvc->state == UVC_STATE_CONNECTED && uvc->video.ep) {
+			usb_ep_disable(uvc->video.ep);
 			ret = config_ep_by_speed(f->config->cdev->gadget,
 					&(uvc->func), uvc->video.ep);
 			if (ret)
