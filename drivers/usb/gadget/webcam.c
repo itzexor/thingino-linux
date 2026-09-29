@@ -158,8 +158,12 @@ static const struct uvc_processing_unit_descriptor_1_1 uvc_processing = {
 	.bSourceID		= 1,
 	.wMaxMultiplier		= cpu_to_le16(16*1024),
 	.bControlSize		= 2,
+	/* D0 brightness, D1 contrast, D2 hue, D3 saturation, D4 sharpness,
+	 * D5 gamma, D6 white balance temperature, D10 power line frequency,
+	 * D12 white balance temperature auto. D8 backlight compensation is
+	 * left out: at any strength the ISP's auto-exposure hunted. */
 	.bmControls[0]		= (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6),
-	.bmControls[1]		= (1 << 0) | (1 << 2) | (1 << 4),
+	.bmControls[1]		= (1 << 2) | (1 << 4),
 	.iProcessing		= 0,
 	.bmVideoStandards	= 0,	/* digital sensor, no analog standard */
 };
@@ -172,14 +176,15 @@ static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3) uvc_extension = {
 	.bUnitID = 4,
 	.guidExtensionCode = { 0x54, 0x48, 0x49, 0x4e, 0x47, 0x49, 0x4e, 0x4f,
 		0x2d, 0x55, 0x56, 0x43, 0x44, 0x2d, 0x01, 0x00 },
-	.bNumControls = 20,
+	.bNumControls = 19,
 	.bNrInPins = 1,
 	.baSourceID = { 2 },
 	.bControlSize = 3,
-	/* Selectors 1-22: ISP (1-9), factory reset (10), encoder settings
+	/* Selectors 1-22: ISP (1-7, 9), factory reset (10), encoder settings
 	 * (13-19), H.264 keyframe request (20), metering (21), rotation (22).
-	 * 11-12 (the old flips) are retired: their bits stay clear. */
-	.bmControls = { 0xff, 0xf3, 0x3f },
+	 * Retired, their bits stay clear: 8 (defog, which had no effect) and
+	 * 11-12 (the old flips). */
+	.bmControls = { 0x7f, 0xf3, 0x3f },
 	.iExtension = 0,
 };
 
