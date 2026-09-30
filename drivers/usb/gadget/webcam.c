@@ -44,10 +44,10 @@ USB_GADGET_COMPOSITE_OPTIONS();
 #define WEBCAM_PRODUCT_ID		0x0110
 #define WEBCAM_DEVICE_BCD		0x0010	/* 0.10 */
 
-static char webcam_vendor_label[] = "thingino";
+static char webcam_vendor_label[] = "k1cam";
 static char webcam_product_label[] = "K1 Camera";
 static char webcam_config_label[] = "Video";
-static char webcam_extension_label[] = "Thingino Camera Controls";
+static char webcam_extension_label[] = "k1cam Camera Controls";
 
 /* string IDs are assigned dynamically */
 
@@ -174,8 +174,9 @@ static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3) uvc_extension = {
 	.bDescriptorType = USB_DT_CS_INTERFACE,
 	.bDescriptorSubType = UVC_VC_EXTENSION_UNIT,
 	.bUnitID = 4,
-	.guidExtensionCode = { 0x54, 0x48, 0x49, 0x4e, 0x47, 0x49, 0x4e, 0x4f,
-		0x2d, 0x55, 0x56, 0x43, 0x44, 0x2d, 0x01, 0x00 },
+	/* ASCII "K1CAM-UVCD-XU-", then 0x01 0x00. */
+	.guidExtensionCode = { 0x4b, 0x31, 0x43, 0x41, 0x4d, 0x2d, 0x55, 0x56,
+		0x43, 0x44, 0x2d, 0x58, 0x55, 0x2d, 0x01, 0x00 },
 	.bNumControls = 19,
 	.bNrInPins = 1,
 	.baSourceID = { 2 },
