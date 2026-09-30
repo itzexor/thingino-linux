@@ -168,24 +168,24 @@ static const struct uvc_processing_unit_descriptor_1_1 uvc_processing = {
 	.bmVideoStandards	= 0,	/* digital sensor, no analog standard */
 };
 
-DECLARE_UVC_EXTENSION_UNIT_DESCRIPTOR(1, 4);
-static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 4) uvc_extension = {
-	.bLength = UVC_DT_EXTENSION_UNIT_SIZE(1, 4),
+DECLARE_UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3);
+static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3) uvc_extension = {
+	.bLength = UVC_DT_EXTENSION_UNIT_SIZE(1, 3),
 	.bDescriptorType = USB_DT_CS_INTERFACE,
 	.bDescriptorSubType = UVC_VC_EXTENSION_UNIT,
 	.bUnitID = 4,
 	.guidExtensionCode = { 0x54, 0x48, 0x49, 0x4e, 0x47, 0x49, 0x4e, 0x4f,
 		0x2d, 0x55, 0x56, 0x43, 0x44, 0x2d, 0x01, 0x00 },
-	.bNumControls = 22,
+	.bNumControls = 19,
 	.bNrInPins = 1,
 	.baSourceID = { 2 },
-	.bControlSize = 4,
+	.bControlSize = 3,
 	/* Selectors 1-22: ISP (1-7, 9), factory reset (10), encoder settings
-	 * (13-19), H.264 keyframe request (20), metering (21), rotation (22),
-	 * saved-control operations (23-25).
-	 * Retired, their bits stay clear: 8 (defog, which had no effect) and
-	 * 11-12 (the old flips). */
-	.bmControls = { 0x7f, 0xf3, 0xff, 0x01 },
+	 * (13-19), H.264 keyframe request (20), metering (21), rotation (22).
+	 * Retired, their bits stay clear: 8 (defog, which had no effect),
+	 * 11-12 (the old flips) and 23-25 (save, apply-on-boot and
+	 * saved-query: uvcd persists every change itself again). */
+	.bmControls = { 0x7f, 0xf3, 0x3f },
 	.iExtension = 0,
 };
 
