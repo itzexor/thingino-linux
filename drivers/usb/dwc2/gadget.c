@@ -990,6 +990,9 @@ static void dwc2_gadget_stall_non_iso_in_ep(struct dwc2_ep *dep) {
 
 static void dwc2_gadget_stop_in_transfer(struct dwc2_ep *dep) {
 	dwc2_gadget_disable_in_endpoint(dep);
+	/* Nothing is armed any more. Left set, BUSY would make every later
+	 * start refuse, wedging the endpoint until it is disabled. */
+	dep->flags &= ~DWC2_EP_BUSY;
 }
 
 /* --------------------------------usb_ep_ops--------------------------- */
