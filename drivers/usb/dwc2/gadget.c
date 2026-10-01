@@ -2051,6 +2051,12 @@ static void dwc2_gadget_in_ep_xfer_complete(struct dwc2_ep *dep) {
 				dev_err(dwc->dev, "IN_COMPL error: dma address not match, "
 					"curr_dma = 0x%08x, r.dma = 0x%08x, len=%d\n",
 					curr_dma, req->request.dma, req->request.length);
+				/* BUSY is already clear: returning with the
+				 * request still queued would leave the
+				 * endpoint idle and refusing new requests.
+				 * Fail this one and carry on with the next. */
+				dwc2_gadget_giveback(dep, req, -EIO);
+				dwc2_gadget_ep_start_transfer(dep);
 				return;
 			}
 
@@ -2198,6 +2204,12 @@ static void dwc2_gadget_out_ep_xfer_complete(struct dwc2_ep *dep) {
 				dev_err(dwc->dev, "OUT_COMPL error: dma address not match, "
 					"curr_dma = 0x%08x, r.dma = 0x%08x, len=%d\n",
 					curr_dma, req->request.dma, req->request.length);
+				/* BUSY is already clear: returning with the
+				 * request still queued would leave the
+				 * endpoint idle and refusing new requests.
+				 * Fail this one and carry on with the next. */
+				dwc2_gadget_giveback(dep, req, -EIO);
+				dwc2_gadget_ep_start_transfer(dep);
 				return;
 			}
 
