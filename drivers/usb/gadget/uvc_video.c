@@ -24,6 +24,8 @@
 #include "uvc.h"
 #include "uvc_queue.h"
 
+static int uvc_video_pump(struct uvc_video *video);
+
 /* --------------------------------------------------------------------------
  * Video codecs
  */
@@ -218,6 +220,7 @@ uvc_video_complete(struct usb_ep *ep, struct usb_request *req)
 	struct uvc_buffer *buf;
 	unsigned long flags;
 	int ret;
+	int resume = 1;
 
 	switch (req->status) {
 	case 0:
@@ -227,12 +230,14 @@ uvc_video_complete(struct usb_ep *ep, struct usb_request *req)
 	case -ESHUTDOWN:	/* disconnect from host. */
 		printk(KERN_INFO "VS request cancelled.\n");
 		uvc_queue_cancel(queue, 1);
+		resume = 0;
 		goto requeue;
 
 	default:
 		printk(KERN_INFO "VS request completed with status %d.\n",
 			req->status);
 		uvc_queue_cancel(queue, 0);
+		resume = req->status != -ECONNRESET;
 		goto requeue;
 	}
 
@@ -248,17 +253,25 @@ uvc_video_complete(struct usb_ep *ep, struct usb_request *req)
 	if ((ret = usb_ep_queue(ep, req, GFP_ATOMIC)) < 0) {
 		printk(KERN_INFO "Failed to queue request (%d).\n", ret);
 		usb_ep_set_halt(ep);
+		spin_lock(&video->req_lock);
+		list_add_tail(&req->list, &video->req_free);
+		spin_unlock(&video->req_lock);
 		spin_unlock_irqrestore(&video->queue.irqlock, flags);
-		goto requeue;
+		return;
 	}
 	spin_unlock_irqrestore(&video->queue.irqlock, flags);
 
 	return;
 
 requeue:
-	spin_lock_irqsave(&video->req_lock, flags);
+	spin_lock_irqsave(&video->queue.irqlock, flags);
+	spin_lock(&video->req_lock);
 	list_add_tail(&req->list, &video->req_free);
-	spin_unlock_irqrestore(&video->req_lock, flags);
+	spin_unlock(&video->req_lock);
+	resume = resume && !list_empty(&queue->irqqueue);
+	spin_unlock_irqrestore(&video->queue.irqlock, flags);
+	if (resume)
+		uvc_video_pump(video);
 }
 
 static int
@@ -347,10 +360,6 @@ uvc_video_pump(struct uvc_video *video)
 	unsigned long flags;
 	int ret;
 
-	/* FIXME TODO Race between uvc_video_pump and requests completion
-	 * handler ???
-	 */
-
 	while (1) {
 		/* Retrieve the first available USB request, protected by the
 		 * request lock.
@@ -371,8 +380,11 @@ uvc_video_pump(struct uvc_video *video)
 		spin_lock_irqsave(&video->queue.irqlock, flags);
 		buf = uvc_queue_head(&video->queue);
 		if (buf == NULL) {
+			spin_lock(&video->req_lock);
+			list_add_tail(&req->list, &video->req_free);
+			spin_unlock(&video->req_lock);
 			spin_unlock_irqrestore(&video->queue.irqlock, flags);
-			break;
+			return 0;
 		}
 
 		video->encode(req, video, buf);
@@ -382,16 +394,14 @@ uvc_video_pump(struct uvc_video *video)
 		if (ret < 0) {
 			printk(KERN_INFO "Failed to queue request (%d)\n", ret);
 			usb_ep_set_halt(video->ep);
+			spin_lock(&video->req_lock);
+			list_add_tail(&req->list, &video->req_free);
+			spin_unlock(&video->req_lock);
 			spin_unlock_irqrestore(&video->queue.irqlock, flags);
-			break;
+			return 0;
 		}
 		spin_unlock_irqrestore(&video->queue.irqlock, flags);
 	}
-
-	spin_lock_irqsave(&video->req_lock, flags);
-	list_add_tail(&req->list, &video->req_free);
-	spin_unlock_irqrestore(&video->req_lock, flags);
-	return 0;
 }
 
 /*
