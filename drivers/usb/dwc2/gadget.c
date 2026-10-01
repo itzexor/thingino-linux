@@ -2105,10 +2105,14 @@ static void dwc2_in_ep_interrupt(struct dwc2_ep *dep) {
 			/* TODO: need handle ISO special case here */
 		}
 
-		dwc2_gadget_in_ep_xfer_complete(dep);
-
+		/* Clear before handling: the handler can start the next
+		 * transfer, and a ZLP needs no DMA, so it may complete before
+		 * a late clear -- which would then erase its XferCompl and
+		 * leave the endpoint BUSY with nothing armed. */
 		CLEAR_IN_EP_INTR(epnum, xfercompl);
 		diepint.b.xfercompl = 0;
+
+		dwc2_gadget_in_ep_xfer_complete(dep);
 	}
 
 	if (diepint.b.ahberr) {
@@ -2255,8 +2259,9 @@ static void dwc2_out_ep_interrupt(struct dwc2_ep *dep) {
 
 	/* Transfer complete */
 	if (doepint.b.xfercompl) {
-		dwc2_gadget_out_ep_xfer_complete(dep);
+		/* Clear before handling, as for IN endpoints. */
 		CLEAR_OUT_EP_INTR(epnum, xfercompl);
+		dwc2_gadget_out_ep_xfer_complete(dep);
 #ifdef DWC_EP_PERIODIC_INT
 		if (dwc->dma_desc_enable && dep->type == USB_ENDPOINT_XFER_ISOC &&
 				doepint.b.pktdrpsts)

@@ -1158,10 +1158,12 @@ static void dwc2_ep0_handle_in_interrupt(struct dwc2_ep *dep) {
 
 	/* Transfer complete */
 	if (diepint.b.xfercompl) {
-		dwc2_ep0_xfer_complete(dwc, 1, 0);
-
+		/* Clear before handling: the next stage may complete before a
+		 * late clear and lose its XferCompl (see dwc2_in_ep_interrupt). */
 		CLEAR_IN_EP0_INTR(xfercompl);
 		diepint.b.xfercompl = 0;
+
+		dwc2_ep0_xfer_complete(dwc, 1, 0);
 	}
 
 	if (diepint.b.ahberr) {
@@ -1268,10 +1270,11 @@ static void dwc2_ep0_handle_out_interrupt(struct dwc2_ep *dep) {
 
 	/* Transfer complete */
 	if (doepint.b.xfercompl) {
-		dwc2_ep0_xfer_complete(dwc, 0, 0);
+		/* Clear before handling, as for IN. */
+		CLEAR_OUT_EP0_INTR(xfercompl);
+		CLEAR_OUT_EP0_INTR(stsphsercvd);
 
-                CLEAR_OUT_EP0_INTR(xfercompl);
-                CLEAR_OUT_EP0_INTR(stsphsercvd);
+		dwc2_ep0_xfer_complete(dwc, 0, 0);
 
 		doepint.b.xfercompl = 0;
 	}
