@@ -168,25 +168,26 @@ static const struct uvc_processing_unit_descriptor_1_1 uvc_processing = {
 	.bmVideoStandards	= 0,	/* digital sensor, no analog standard */
 };
 
-DECLARE_UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3);
-static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 3) uvc_extension = {
-	.bLength = UVC_DT_EXTENSION_UNIT_SIZE(1, 3),
+DECLARE_UVC_EXTENSION_UNIT_DESCRIPTOR(1, 4);
+static struct UVC_EXTENSION_UNIT_DESCRIPTOR(1, 4) uvc_extension = {
+	.bLength = UVC_DT_EXTENSION_UNIT_SIZE(1, 4),
 	.bDescriptorType = USB_DT_CS_INTERFACE,
 	.bDescriptorSubType = UVC_VC_EXTENSION_UNIT,
 	.bUnitID = 4,
 	/* ASCII "K1CAM-UVCD-XU-", then 0x01 0x00. */
 	.guidExtensionCode = { 0x4b, 0x31, 0x43, 0x41, 0x4d, 0x2d, 0x55, 0x56,
 		0x43, 0x44, 0x2d, 0x58, 0x55, 0x2d, 0x01, 0x00 },
-	.bNumControls = 19,
+	.bNumControls = 21,
 	.bNrInPins = 1,
 	.baSourceID = { 2 },
-	.bControlSize = 3,
+	.bControlSize = 4,
 	/* Selectors 1-22: ISP (1-7, 9), factory reset (10), encoder settings
 	 * (13-19), H.264 keyframe request (20), metering (21), rotation (22).
 	 * Retired, their bits stay clear: 8 (defog, which had no effect),
-	 * 11-12 (the old flips) and 23-25 (save, apply-on-boot and
-	 * saved-query: uvcd persists every change itself again). */
-	.bmControls = { 0x7f, 0xf3, 0x3f },
+	 * 11-12 (the old flips), 15 (the old GOP length), and 23-25 (save,
+	 * apply-on-boot and saved-query). Selectors 26-28 are the firmware
+	 * COMMAND, DATA and STATUS frames. */
+	.bmControls = { 0x7f, 0xb3, 0x3f, 0x0e },
 	.iExtension = 0,
 };
 
