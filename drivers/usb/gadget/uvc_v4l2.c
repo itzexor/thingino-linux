@@ -38,6 +38,8 @@ uvc_send_response(struct uvc_device *uvc, struct uvc_request_data *data)
 
 	if (data->length < 0)
 		return usb_ep_set_halt(cdev->gadget->ep0);
+	if (data->length > sizeof(data->data))
+		return -EINVAL;
 
 	req->length = min_t(unsigned int, uvc->event_length, data->length);
 	req->zero = data->length < uvc->event_length;
@@ -286,7 +288,7 @@ uvc_v4l2_do_ioctl(struct file *file, unsigned int cmd, void *arg)
 			 */
 			uvc->event_setup_out =
 				!(uvc_event->req.bRequestType & USB_DIR_IN);
-			uvc->event_length = uvc_event->req.wLength;
+			uvc->event_length = le16_to_cpu(uvc_event->req.wLength);
 		}
 
 		return ret;

@@ -99,7 +99,9 @@ extern unsigned int uvc_gadget_trace_param;
 #define DRIVER_VERSION_NUMBER			KERNEL_VERSION(0, 1, 0)
 
 #define UVC_NUM_REQUESTS			16
-#define UVC_MAX_REQUEST_SIZE			64
+/* struct uvc_request_data must fit in v4l2_event.u.data (64 bytes), leaving
+ * 60 bytes after its signed length field. */
+#define UVC_MAX_REQUEST_SIZE			60
 #define UVC_MAX_EVENTS				4
 
 /* ------------------------------------------------------------------------
