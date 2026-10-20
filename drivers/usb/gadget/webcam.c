@@ -36,12 +36,13 @@ USB_GADGET_COMPOSITE_OPTIONS();
  * Device descriptor
  */
 
-#define WEBCAM_VENDOR_ID		0x1d6b	/* Linux Foundation */
-/* Not upstream's 0x0102: that is ether.c's EEM gadget, and hosts name the
- * device from the USB ID database, so it showed up as "EEM Gadget". No
- * gadget uses 0x0110 and the database has no entry for it, so hosts fall
- * back to the product string below. */
-#define WEBCAM_PRODUCT_ID		0x0110
+/* Unofficial FOSS community VID, with "K1" encoded as the PID. This pair
+ * is a project convention, not an exclusive USB-IF allocation. Keep the
+ * k1cam manufacturer/product strings when identifying it on the host.
+ * See k1cam-firmware/USB-IDENTITY.md for the collision checks and migration.
+ */
+#define WEBCAM_VENDOR_ID		0xf055
+#define WEBCAM_PRODUCT_ID		0x4b31
 #define WEBCAM_DEVICE_BCD		0x0010	/* 0.10 */
 
 static char webcam_vendor_label[] = "k1cam";
