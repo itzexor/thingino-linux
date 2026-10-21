@@ -190,9 +190,25 @@ directly_start:
 
 	DWC2_EP0_DEBUG_MSG("dwc2_ep0_out_start(0x%08x)\n", dwc->ctrl_req_addr);
 
-	doepctl.b.cnak = 1;
+	/*
+	 * Keep the NAK the core set when it took the last SETUP: SETUP
+	 * packets are accepted regardless, and the NAK holds off the host's
+	 * next data stage until a transfer is armed for it. Cleared here, a
+	 * DATA packet that followed a SETUP arriving just before this write
+	 * landed in the SETUP buffer, and the core never reported that SETUP.
+	 * Only the OUT status stage clears it (dwc2_ep0_do_status_phase).
+	 */
 	doepctl.b.epena = 1;
 	dwc_writel(doepctl.d32, &dev_if->out_ep_regs[0]->doepctl);
+}
+
+static void dwc2_ep0_out_clear_nak(struct dwc2 *dwc) {
+	dwc_otg_dev_out_ep_regs_t	*out_regs = dwc->dev_if.out_ep_regs[0];
+	depctl_data_t			 doepctl;
+
+	doepctl.d32 = dwc_readl(&out_regs->doepctl);
+	doepctl.b.cnak = 1;
+	dwc_writel(doepctl.d32, &out_regs->doepctl);
 }
 
 static void dwc2_ep0_status_cmpl(struct usb_ep *ep, struct usb_request *req)
@@ -219,6 +235,9 @@ static int dwc2_ep0_do_status_phase(struct dwc2 *dwc) {
 	dwc2_ep0_out_start(dwc);
 
 	if (!is_in) {	      /* OUT status phase */
+		/* the host's zero-length status packet lands in the SETUP
+		 * buffer just armed: let it in */
+		dwc2_ep0_out_clear_nak(dwc);
 		return 0;
 	} else {
 		dwc->ep0_usb_req.dwc2_ep = dwc2_ep0_get_in_ep(dwc);
@@ -555,6 +574,16 @@ static int __dwc2_gadget_ep0_queue(struct dwc2_ep *outep0,
 
 				dwc->ep0state = EP0_STATUS_PHASE;
 
+				/*
+				 * Arm for the next SETUP before the IN status, as
+				 * dwc2_ep0_do_status_phase() does: the host sends
+				 * it right after our ZLP. Armed only once the
+				 * status completed, the rewrite raced that SETUP
+				 * (a CDC-ACM line-state request followed by a UVC
+				 * control) and endpoint 0 went silent for good.
+				 */
+				dwc2_ep0_out_start(dwc);
+
 				can_queue = 1;
 			}
 			break;
@@ -628,6 +657,7 @@ out:
 
 static void dwc2_ep0_stall_and_restart(struct dwc2 *dwc) {
 	struct dwc2_ep		*dep;
+	depctl_data_t		 doepctl;
 
 	dev_info(dwc->dev, "%s\n", __func__);
 
@@ -652,6 +682,15 @@ static void dwc2_ep0_stall_and_restart(struct dwc2 *dwc) {
 
 	dwc->ep0state = EP0_WAITING_SETUP_PHASE;
 	dwc2_ep0_out_start(dwc);
+
+	/*
+	 * Refuse an OUT data stage too. The halt above leaves ep0out alone,
+	 * and since dwc2_ep0_out_start() keeps the NAK, the host would retry
+	 * its DATA until it timed out. The core clears this on the next SETUP.
+	 */
+	doepctl.d32 = dwc_readl(&dwc->dev_if.out_ep_regs[0]->doepctl);
+	doepctl.b.stall = 1;
+	dwc_writel(doepctl.d32, &dwc->dev_if.out_ep_regs[0]->doepctl);
 }
 
 int dwc2_gadget_ep0_set_halt(struct usb_ep *ep, int value) {
