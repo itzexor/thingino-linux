@@ -26,6 +26,7 @@
 #include <mach/jzsnd.h>
 
 #include <mach/txx-funcs.h>
+#include <net/sock.h>
 
 #include <linux/mfd/jz_tcu.h>
 
@@ -1156,9 +1157,43 @@ static struct nlmsghdr *private_nlmsg_put(struct sk_buff *skb, u32 portid, u32 s
 }
 
 
+/*
+ * The ISP firmware (libt31-firmware) creates a netlink socket, protocol 23,
+ * at every ISP open, and at close frees it through sk->sk_socket read at
+ * offset 304, from Ingenic's struct sock. Ours has sk_socket at 296, so it
+ * reads sk_frag.page, NULL on a kernel socket, and never frees it. Every
+ * open after the first then failed in netlink_insert: "tisp_netlink_init,77:
+ * create netlink socket error." and a stack dump at each sensor bring-up.
+ * Keep the first open's socket and hand it back; the callback is the same.
+ */
+static struct sock *isp_netlink_sk;
+static int isp_netlink_unit = -1;
+static DEFINE_MUTEX(isp_netlink_lock);
+
 static struct sock *private_netlink_kernel_create(struct net *net, int unit, struct netlink_kernel_cfg *cfg)
 {
-	return netlink_kernel_create(net, unit, cfg);
+	struct sock *sk;
+
+	mutex_lock(&isp_netlink_lock);
+	if (isp_netlink_sk && unit == isp_netlink_unit) {
+		sk = isp_netlink_sk;
+	} else {
+		sk = netlink_kernel_create(net, unit, cfg);
+		if (sk && !isp_netlink_sk) {
+			isp_netlink_sk = sk;
+			isp_netlink_unit = unit;
+		}
+	}
+	mutex_unlock(&isp_netlink_lock);
+	return sk;
+}
+
+/* Should the firmware ever free its socket, the next open still gets it. */
+static void private_sock_release(struct socket *sock)
+{
+	if (isp_netlink_sk && sock == isp_netlink_sk->sk_socket)
+		return;
+	sock_release(sock);
 }
 
 
@@ -1287,7 +1322,7 @@ static struct jz_driver_common_interfaces private_funcs = {
 	.priv_nlmsg_put = private_nlmsg_put,
 	.priv_netlink_unicast = netlink_unicast,
 	.priv_netlink_kernel_create = private_netlink_kernel_create,
-	.priv_sock_release = sock_release,
+	.priv_sock_release = private_sock_release,
 
 	/* filp */
 	.priv_filp_open = filp_open,
